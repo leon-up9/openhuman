@@ -278,8 +278,16 @@ fn attribution_headers() -> std::collections::BTreeMap<String, String> {
 
 fn resolve_cortexdb(config: &Config) -> Binding {
     let configured = config.memory.endpoint_for(CORTEXDB_ENGINE);
+    // Hosted deployments pin the CortexDB server here so the API-key option
+    // only asks for a key; a user-set endpoint still wins.
     let endpoint = configured
         .clone()
+        .or_else(|| {
+            std::env::var("OPENHUMAN_CORTEXDB_ENDPOINT")
+                .ok()
+                .map(|v| v.trim().to_string())
+                .filter(|v| !v.is_empty())
+        })
         .unwrap_or_else(|| tinymemory_integrations::cortex::CORTEX_API_ENDPOINT.to_string());
     let key = match read_cortexdb_key(config) {
         Ok(Some(key)) => key,
