@@ -6,6 +6,11 @@
 # Run:     docker run -p 7788:7788 --env-file .env openhuman-core
 # ---------------------------------------------------------------------------
 
+# Railway (and other hosts) clone without git submodules, so fetch vendor/
+# (including nested submodules) inside the build.
+FROM alpine/git AS src
+RUN git clone --depth 1 --recurse-submodules --shallow-submodules -j8     https://github.com/tinyhumansai/openhuman /src
+
 # ==========================================================================
 # Stage 1: Build the Rust binary
 # ==========================================================================
@@ -57,7 +62,7 @@ COPY crates/openhuman-tui/Cargo.toml crates/openhuman-tui/Cargo.toml
 # the dep-cache build below already resolves it). CI must init the submodule
 # before docker build — see the "Init tinyagents submodule" steps in
 # release-production.yml / release-staging.yml.
-COPY vendor/ vendor/
+COPY --from=src /src/vendor/ vendor/
 # Create a dummy src to build deps
 RUN mkdir -p crates/openhuman-cli/src crates/openhuman-core/src crates/openhuman-embed/src \
              crates/openhuman-rpc/src crates/openhuman-tinyhumans/src crates/openhuman-tui/src && \
