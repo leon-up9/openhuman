@@ -9,7 +9,10 @@
 # Railway (and other hosts) clone without git submodules, so fetch vendor/
 # (including nested submodules) inside the build.
 FROM alpine/git AS src
-RUN git clone --depth 1 --recurse-submodules --shallow-submodules -j8     https://github.com/tinyhumansai/openhuman /src
+# Pinned to the upstream commit this fork's crates are based on; newer vendor/
+# heads no longer compile against them.
+ARG UPSTREAM_REV=9aebda6e5746d6a0030b5239b1e022b4a9ab45ec
+RUN git init /src && cd /src  && git remote add origin https://github.com/tinyhumansai/openhuman  && git fetch --depth 1 origin ${UPSTREAM_REV}  && git checkout FETCH_HEAD  && git submodule update --init --recursive --depth 1 -j8
 
 # ==========================================================================
 # Stage 1: Build the Rust binary
