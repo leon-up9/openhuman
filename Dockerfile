@@ -12,7 +12,7 @@ FROM alpine/git AS src
 # Pinned to the upstream commit this fork's crates are based on; newer vendor/
 # heads no longer compile against them.
 ARG UPSTREAM_REV=9aebda6e5746d6a0030b5239b1e022b4a9ab45ec
-RUN git init /src && cd /src  && git remote add origin https://github.com/tinyhumansai/openhuman  && git fetch --depth 1 origin ${UPSTREAM_REV}  && git checkout FETCH_HEAD  && git submodule update --init --recursive --depth 1 -j8
+RUN git init /src && cd /src  && git remote add origin https://github.com/tinyhumansai/openhuman  && git fetch --depth 1 origin ${UPSTREAM_REV}  && git checkout FETCH_HEAD  && for i in 1 2 3 4; do git submodule update --init --recursive -j2 && break || { echo "submodule retry $i"; sleep 10; }; done  && git submodule status --recursive | grep -v '^ ' && exit 1 || true
 
 # ==========================================================================
 # Stage 1: Build the Rust binary
